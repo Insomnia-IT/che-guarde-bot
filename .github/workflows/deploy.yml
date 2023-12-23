@@ -55,7 +55,7 @@ jobs:
           ${{ needs.build.outputs.imageFullname }}
   cleanup:
     if: ${{ ! inputs.no_cleanup }}
-    needs: build
+    needs: deploy
     runs-on: [self-hosted, rumsrv]
     steps:
       - name: Cleanup docker containers
