@@ -35,6 +35,12 @@ jobs:
       uses: actions/checkout@v3
     - name: Build image
       run: docker build -t $IMAGE_FULLNAME .
+    outputs:
+      imageFullname: $IMAGE_FULLNAME
+  deploy:
+    needs: build
+    runs-on: [self-hosted, rumsrv]
+    steps:
     - name: Stop old container
       run: docker rm -f ${{ vars.IMAGE_BASENAME }}
     - name: Run new container
@@ -46,7 +52,7 @@ jobs:
           -e CHANNEL_CHAT_ID=${{ vars.CHANNEL_CHAT_ID }} \
           -e WORK_CHAT_ID=${{ vars.WORK_CHAT_ID }} \
           --name ${{ vars.IMAGE_BASENAME }} \
-          $IMAGE_FULLNAME
+          ${{ needs.build.outputs.imageFullname }}
   cleanup:
     if: ${{ ! inputs.no_cleanup }}
     needs: build
