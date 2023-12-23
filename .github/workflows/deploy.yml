@@ -16,7 +16,17 @@ env:
   CARGO_TERM_COLOR: always
   
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Check that code can compile
+        run: cargo check
   build:
+    needs: check
     runs-on: [self-hosted, rumsrv]
     env:
       IMAGE_FULLNAME: ${{ vars.IMAGE_BASENAME }}:$GITHUB_SHA
