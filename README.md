@@ -1,16 +1,31 @@
 # che-guarde-bot
+Телеграм бот для администрирования канала посольства и чата комментариев. Для создания использовалась крейт [teloxide](https://docs.rs/teloxide/latest/teloxide/).
 
-A telegram bot made with [teloxide](https://docs.rs/teloxide/latest/teloxide/) to do some routine administration.
+## Проблема
+Хочется сохранить в канале возможность комментировать без того, чтобы добавляться в чат. Следовательно чат обязательно должен быть без заявок на вступление. Но без заявок могут попасть левые и увидеть закрытую информацию из телеграм-канала. 
 
-## User story
-There is a public channel which has a joined chat for comments. The last one should be open for anyone to allow users to write comments below posts with no restrictions. But at the same time, disscussions beyond post's topics should be accessable only for those people who match some rules. Users who don't match the rules, should be kicked from the chat and banned in it.
+Кроме того, один из пунктов - удаление из чата при удалении из канала. Задумка, что у всех кто в чате должна быть подписка на канал. Вышел из канала - потерял возможность и в чате быть. Обратной связи нет. Из чата можно самостоятельно выйти, оставшись в канале.
 
-As an admin I don't want to check every person who has joined and then do according actions manually.
+## Решение
+Придумался такой бот-модератор. Вступить могут все у кого есть ссылка, но чужаки быстро удаляются и банятся.
 
-## Solution
-Bot is a member of the channel and chat. And it has admin rights to kick and ban users. It's also a member of a chat of administrators (aka work chat). 
+![telegram-cloud-photo-size-2-5355336890104007911-y](https://github.com/Insomnia-IT/che-guarde-bot/assets/33791946/a9385c01-85f8-4886-a762-8dfccc33ea0c)
 
-Once a user joins the chat of comments, Bot checks that the user follows the rules. It does same when a user left the chat. In most cases Bot also sends a notification about processed users. For instance, if an admin invited a user, then Bot sends a message to the work chat like 'Admin (@username) added a user (@username) who isn't a member of channel'.
+# Разработка
+Для запуска локально обязательны несколько переменных:
+- CHANNEL_ID - id канала,
+- CHANNEL_CHAT_ID - id чата комментариев,
+- WORK_CHAT_ID - id рабочего чата, в который будут приходить уведомления,
+- TELOXIDE_TOKEN - токен телеграм бота.
+Id чатов и канала можно получить, [например](https://stackoverflow.com/questions/72640703/telegram-how-to-find-group-chat-id), с помощью веб-версии телеграма. Токен выдается специальным ботом под названием [BotFather](https://telegram.me/BotFather).
 
-## Development
-When Debug profile is used and maintaner_id is set, additional commands are available. It helps with development and debugging. Maintainer can (un)ban h(im/er)self in the channel and chat, kick from the chat and do some other minor things.
+Эти переменные могут быть переданы как явно, так и через конфиг файл. Например, если в корне есть файл .env.local, то вызов будет следующий:
+```rust
+CONFIG_PATH=".env.local" cargo run
+```
+
+Если приложение запускается в дебаг профиле, то владелец бота, при записи своего пользовательского id в переменную MAINTAINER_ID, может вызывать дополнительные полезные команды, помогающие при разработке. Полный список команд можно посмотреть, отослав запущенному боту команду /help.
+
+Логирование можно поднастроить стандартной переменной RUST_LOG. Пример использования можно посмотреть в файле .env.example в корне проекта.
+
+Проверить доступность бота можно командой /ping, которая доступна для всех пользователей. Она должна быть отослана в личной беседе боту. Если бот доступен, он отвечает *pong*.
