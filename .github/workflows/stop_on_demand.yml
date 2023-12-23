@@ -1,0 +1,26 @@
+name: Stop bot hosted in rumsrv
+
+on:
+  workflow_dispatch:
+    inputs:
+      no_cleanup:
+        description: Skip cleanup
+        required: false
+        default: true
+        type: boolean
+  
+jobs:
+  action:
+    runs-on: [self-hosted, rumsrv]
+    steps:
+    - name: Stop container
+      run: docker rm -f ${{ vars.IMAGE_BASENAME }}
+    - name: Cleanup docker containers
+      if: ${{ ! inputs.no_cleanup }}
+      run: docker container prune --filter "until=24h" -f
+    - name: Cleanup docker images
+      if: ${{ ! inputs.no_cleanup }}
+      run: docker image prune --filter "until=24h" -af
+    - name: cleanup docker build cache
+      if: ${{ ! inputs.no_cleanup }}
+      run: docker builder prune --filter "until=24h" -af

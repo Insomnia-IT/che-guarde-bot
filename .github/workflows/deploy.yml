@@ -1,0 +1,50 @@
+name: Deploy to rumsrv
+
+on:
+  pull_request:
+    branches: 
+    - "master"
+  workflow_dispatch:
+    inputs:
+      no_cleanup:
+        description: Skip cleanup
+        required: false
+        default: true
+        type: boolean
+  
+env:
+  CARGO_TERM_COLOR: always
+  
+jobs:
+  build:
+    runs-on: [self-hosted, rumsrv]
+    env:
+      IMAGE_FULLNAME: ${{ vars.IMAGE_BASENAME }}:$GITHUB_SHA
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Build image
+      run: docker build -t $IMAGE_FULLNAME .
+    - name: Stop old container
+      run: docker rm -f ${{ vars.IMAGE_BASENAME }}
+    - name: Run new container
+      run: | 
+        docker run \
+          -d \
+          -e TELOXIDE_TOKEN=${{ secrets.TELOXIDE_TOKEN }} \
+          -e CHANNEL_ID=${{ vars.CHANNEL_ID }} \
+          -e CHANNEL_CHAT_ID=${{ vars.CHANNEL_CHAT_ID }} \
+          -e WORK_CHAT_ID=${{ vars.WORK_CHAT_ID }} \
+          --name ${{ vars.IMAGE_BASENAME }} \
+          $IMAGE_FULLNAME
+  cleanup:
+    if: ${{ ! inputs.no_cleanup }}
+    needs: build
+    runs-on: [self-hosted, rumsrv]
+    steps:
+      - name: Cleanup docker containers
+        run: docker container prune --filter "until=24h" -f
+      - name: Cleanup docker images
+        run: docker image prune --filter "until=24h" -af
+      - name: cleanup docker build cache
+        run: docker builder prune --filter "until=24h" -af
