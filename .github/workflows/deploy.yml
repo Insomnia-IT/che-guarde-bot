@@ -30,13 +30,17 @@ jobs:
     runs-on: [self-hosted, rumsrv]
     steps:
     - name: Set IMAGE_FULLNAME
-      run: echo "IMAGE_FULLNAME=${{ vars.IMAGE_BASENAME }}:$GITHUB_SHA" >> $GITHUB_ENV
+      id: set_image_fullname
+      run: |
+        IMAGE_FULLNAME=${{ vars.IMAGE_BASENAME }}:$GITHUB_SHA
+        echo "IMAGE_FULLNAME=$IMAGE_FULLNAME" >> $GITHUB_ENV
+        echo "image_fullname=$IMAGE_FULLNAME" >> $GITHUB_OUTPUT
     - name: Checkout
       uses: actions/checkout@v3
     - name: Build image
       run: docker build -t $IMAGE_FULLNAME .
     outputs:
-      imageFullname: $IMAGE_FULLNAME
+      image_fullname: ${{ steps.set_image_fullname.outputs.image_fullname }}
   deploy:
     needs: build
     runs-on: [self-hosted, rumsrv]
@@ -52,7 +56,7 @@ jobs:
           -e CHANNEL_CHAT_ID=${{ vars.CHANNEL_CHAT_ID }} \
           -e WORK_CHAT_ID=${{ vars.WORK_CHAT_ID }} \
           --name ${{ vars.IMAGE_BASENAME }} \
-          ${{ needs.build.outputs.imageFullname }}
+          ${{ needs.build.outputs.image_fullname }}
   cleanup:
     if: ${{ ! inputs.no_cleanup }}
     needs: deploy
