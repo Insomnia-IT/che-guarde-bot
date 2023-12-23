@@ -28,9 +28,9 @@ jobs:
   build:
     needs: check
     runs-on: [self-hosted, rumsrv]
-    env:
-      IMAGE_FULLNAME: ${{ vars.IMAGE_BASENAME }}:$GITHUB_SHA
     steps:
+    - name: Set IMAGE_FULLNAME
+      run: echo "IMAGE_FULLNAME=${{ vars.IMAGE_BASENAME }}:$GITHUB_SHA" >> $GITHUB_ENV
     - name: Checkout
       uses: actions/checkout@v3
     - name: Build image
